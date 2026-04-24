@@ -1,6 +1,6 @@
 namespace TicketFlow.API.Enums
 {
-    public enum StatusChmado
+    public enum StatusChamado
     {
         Aberto = 1,
         EmAndamento = 2,
