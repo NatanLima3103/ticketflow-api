@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using TicketFlow.API.Models;
 
 namespace TicketFlow.API.Data

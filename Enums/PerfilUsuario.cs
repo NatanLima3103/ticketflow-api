@@ -4,6 +4,6 @@ namespace TicketFlow.API.Enums
     {
         Admin = 1,
         Tecnico = 2,
-        Solicitante =3
+        Solicitante = 3
     }
 }
