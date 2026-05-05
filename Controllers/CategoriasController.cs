@@ -31,7 +31,12 @@ namespace TicketFlow.API.Controllers
         public async Task<ActionResult<IEnumerable<CategoriaResponseDto>>> Listar()
         {
             var categorias = await _context.Categorias
-                .Select(categoria => ConverterParaDto(categoria))
+                .Select(categoria => new CategoriaResponseDto
+                {
+                    Id = categoria.Id,
+                    Nome = categoria.Nome,
+                    Descricao = categoria.Descricao
+                })
                 .ToListAsync();
 
             return Ok(categorias);
