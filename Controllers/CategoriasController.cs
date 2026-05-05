@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TicketFlow.API.Data;
 using TicketFlow.API.Models;
+using TicketFlow.API.DTOs;
 
 namespace TicketFlow.API.Controllers
 {
@@ -16,43 +17,69 @@ namespace TicketFlow.API.Controllers
             _context = context;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Categoria>>> Listar()
+        private static CategoriaResponseDto ConverterParaDto(Categoria categoria)
         {
-            return await _context.Categorias.ToListAsync();
+            return new CategoriaResponseDto
+            {
+                Id = categoria.Id,
+                Nome = categoria.Nome,
+                Descricao = categoria.Descricao
+            };
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<CategoriaResponseDto>>> Listar()
+        {
+            var categorias = await _context.Categorias
+                .Select(categoria => ConverterParaDto(categoria))
+                .ToListAsync();
+
+            return Ok(categorias);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Categoria>> BuscarPorId(int id)
+        public async Task<ActionResult<CategoriaResponseDto>> BuscarPorId(int id)
         {
             var categoria = await _context.Categorias.FindAsync(id);
 
             if (categoria == null)
             {
-                return NotFound();
+                return NotFound("Categoria não encontrada.");
             }
 
-            return categoria;
+            return Ok(ConverterParaDto(categoria));
         }
 
         [HttpPost]
-        public async Task<ActionResult<Categoria>> Criar(Categoria categoria)
+        public async Task<ActionResult<CategoriaResponseDto>> Criar(CategoriaCreateDto dto)
         {
+            var categoria = new Categoria
+            {
+                Nome = dto.Nome,
+                Descricao = dto.Descricao
+            };
+
             _context.Categorias.Add(categoria);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(BuscarPorId), new { id = categoria.Id }, categoria);
+            var categoriaResponse = ConverterParaDto(categoria);
+
+            return CreatedAtAction(nameof(BuscarPorId), new { id = categoria.Id }, categoriaResponse);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Atualizar(int id, Categoria categoria)
+        public async Task<IActionResult> Atualizar(int id, CategoriaUpdateDto dto)
         {
-            if (id != categoria.Id)
+            var categoria = await _context.Categorias.FindAsync(id);
+
+            if (categoria == null)
             {
-                return BadRequest();
+                return NotFound("Categoria não encontrada.");
             }
 
-            _context.Entry(categoria).State = EntityState.Modified;
+            categoria.Nome = dto.Nome;
+            categoria.Descricao = dto.Descricao;
+
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -65,7 +92,7 @@ namespace TicketFlow.API.Controllers
 
             if (categoria == null)
             {
-                return NotFound();
+                return NotFound("Categoria não encontrada.");
             }
 
             _context.Categorias.Remove(categoria);
