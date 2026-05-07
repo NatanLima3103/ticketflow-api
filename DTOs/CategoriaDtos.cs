@@ -15,6 +15,7 @@ namespace TicketFlow.API.DTOs
     public class CategoriaUpdateDto
     {
         [Required]
+        public int Id { get; set; }
         [MaxLength(80)]
         public string Nome { get; set; } = string.Empty;
 

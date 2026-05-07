@@ -28,6 +28,9 @@ namespace TicketFlow.API.DTOs
     public class ChamadoUpdateDto
     {
         [Required]
+        public int Id{ get; set; }
+
+        [Required]
         [MaxLength(150)]
         public string Titulo { get; set; } = string.Empty;
 
@@ -47,7 +50,7 @@ namespace TicketFlow.API.DTOs
         [Required]
         public int CategoriaId { get; set; }
 
-        public int? TecnicoResponsavel { get; set; }
+        public int? TecnicoResponsavelId { get; set; }
     }
 
     public class ChamadoResponseDto
@@ -60,13 +63,13 @@ namespace TicketFlow.API.DTOs
         public DateTime DataAbertura { get; set; }
         public DateTime? DataAtualizacao { get; set; }
 
-        public int UsuarioIs { get; set; }
+        public int UsuarioId { get; set; }
         public string? UsuarioNome { get; set; }
 
         public int CategoriaId { get; set; }
         public string? CategoriaNome { get; set; }
 
-        public int? TecnicoREsponsavelId { get; set; }
+        public int? TecnicoResponsavelId { get; set; }
         public string? TecnicoResponsavelNome { get; set; }
     }
 }
