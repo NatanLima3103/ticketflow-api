@@ -65,7 +65,7 @@ namespace TicketFlow.API.Controllers
 
             if (chamado == null)
             {
-                return NotFound();
+                return NotFound("Chamado não encontrado.");
             }
 
             return Ok(ConverterParaDto(chamado));
@@ -105,14 +105,14 @@ namespace TicketFlow.API.Controllers
         {
             if (id != dto.Id)
             {
-                return BadRequest();
+                return BadRequest("O id da URL precisa ser igual ao id enviado.");
             }
 
             var chamado = await _context.Chamados.FindAsync(id);
 
             if (chamado == null)
             {
-                return NotFound();
+                return NotFound("Chamado não encontrado.");
             }
 
             chamado.Titulo = dto.Titulo;
@@ -136,7 +136,7 @@ namespace TicketFlow.API.Controllers
 
             if (chamado == null)
             {
-                return NotFound();
+                return NotFound("Chamado não encontrado.");
             }
 
             _context.Chamados.Remove(chamado);

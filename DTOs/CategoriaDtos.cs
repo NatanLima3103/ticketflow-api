@@ -16,6 +16,8 @@ namespace TicketFlow.API.DTOs
     {
         [Required]
         public int Id { get; set; }
+
+        [Required]
         [MaxLength(80)]
         public string Nome { get; set; } = string.Empty;
 
