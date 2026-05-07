@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using TicketFlow.API.Data;
+using TicketFlow.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +29,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))
     )
 );
+
+builder.Services.AddScoped<TokenService>();
 
 var app = builder.Build();
 

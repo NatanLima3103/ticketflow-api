@@ -74,7 +74,11 @@ namespace TicketFlow.API.Controllers
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Atualizar(int id, UsuarioUpdateDto dto)
-        {
+        {   
+            if (id != dto.Id)
+            {
+                return BadRequest("O id da URL precisa ser igual ao id enviado.");
+            }
             var usuario = await _context.Usuarios.FindAsync(id);
 
             if (usuario == null)
