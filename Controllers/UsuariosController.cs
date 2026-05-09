@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using TicketFlow.API.Data;
 using TicketFlow.API.DTOs;
 using TicketFlow.API.Models;
@@ -8,6 +9,7 @@ namespace TicketFlow.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class UsuariosController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -53,13 +55,14 @@ namespace TicketFlow.API.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         public async Task<ActionResult<UsuarioResponseDto>> Criar(UsuarioCreateDto dto)
         {
             var usuario = new Usuario
             {
                 Nome = dto.Nome,
                 Email = dto.Email,
-                Senha = dto.Senha,
+                Senha = BCrypt.Net.BCrypt.HashPassword(dto.Senha),
                 Perfil = dto.Perfil
             };
 
