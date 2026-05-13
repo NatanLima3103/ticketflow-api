@@ -1,12 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Ticket, Users, Settings, LogOut, PlusCircle } from 'lucide-react';
+import ChamadosTabela from '../components/ChamadosTabela';
+import NovoChamadoModal from '../components/NovoChamadoModal';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   // Recupera o nome do usuário que salvamos no Login
   const usuario = JSON.parse(localStorage.getItem('@TicketFlow:usuario') || '{}');
 
+  // Estado para controlar a abertura do modal
+  const [modalAberto, setModalAberto] = React.useState(false);
+  
   const handleLogout = () => {
     localStorage.removeItem('@TicketFlow:token');
     localStorage.removeItem('@TicketFlow:usuario');
@@ -67,14 +72,23 @@ export default function Dashboard() {
             </div>
           </div>
 
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Últimos Chamados</h3>
+          <ChamadosTabela />
+
           {/* Botão de Ação Rápida */}
-          <div className="bg-white p-8 rounded-xl shadow-sm text-center border-2 border-dashed border-gray-200">
+          <div className="mt-8 bg-white p-8 rounded-xl shadow-sm text-center border-2 border-dashed border-gray-200">
             <h4 className="text-lg font-medium text-gray-700 mb-4">Precisas de ajuda técnica?</h4>
-            <button className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition-all shadow-md">
+            <button 
+              onClick={() => setModalAberto(true)} 
+              className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 transition-all shadow-md"
+            >
               <PlusCircle size={20}/> Abrir Novo Chamado
             </button>
           </div>
         </section>
+
+        {/* Modal de Novo Chamado */}
+        <NovoChamadoModal isOpen={modalAberto} onClose={() => setModalAberto(false)} />
       </main>
     </div>
   );
