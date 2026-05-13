@@ -1,23 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Eye, Edit2, Trash2 } from 'lucide-react';
 
-export default function ChamadosTabela() {
-  // 1. Transformamos a lista em um ESTADO (State)
-  const [chamados, setChamados] = useState([
-    { id: '101', assunto: 'Erro no login do sistema', cliente: 'Empresa ABC', data: '13/05/2026', status: 'Aberto', prioridade: 'Alta' },
-    { id: '102', assunto: 'Instalação de impressora', cliente: 'João Silva', data: '12/05/2026', status: 'Em Atendimento', prioridade: 'Média' },
-    { id: '103', assunto: 'Dúvida sobre faturamento', cliente: 'Maria Souza', data: '10/05/2026', status: 'Resolvido', prioridade: 'Baixa' },
-  ]);
-
-  // 2. Função para Excluir
-  const handleDelete = (id) => {
-    if (window.confirm("Tem certeza que deseja excluir este chamado?")) {
-      // Filtramos a lista para manter apenas quem NÃO tem o ID que queremos apagar
-      const novaLista = chamados.filter(chamado => chamado.id !== id);
-      setChamados(novaLista);
-    }
-  };
-
+export default function ChamadosTabela({ chamados, aoExcluir }) {
   const getStatusColor = (status) => {
     switch (status) {
       case 'Aberto': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -55,18 +39,8 @@ export default function ChamadosTabela() {
                 <td className="p-4 text-sm text-gray-500">{item.data}</td>
                 <td className="p-4 text-sm">
                   <div className="flex justify-center gap-2">
-                    <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Visualizar">
-                      <Eye size={18} />
-                    </button>
-                    <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Editar">
-                      <Edit2 size={18} />
-                    </button>
-                    {/* 3. Ligamos a função ao botão da lixeira */}
-                    <button 
-                      onClick={() => handleDelete(item.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" 
-                      title="Excluir"
-                    >
+                    <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" 
+                            onClick={() => aoExcluir(item.id)}>
                       <Trash2 size={18} />
                     </button>
                   </div>
@@ -75,9 +49,7 @@ export default function ChamadosTabela() {
             ))
           ) : (
             <tr>
-              <td colSpan="6" className="p-8 text-center text-gray-500 italic">
-                Nenhum chamado encontrado.
-              </td>
+              <td colSpan="6" className="p-8 text-center text-gray-500 italic">Nenhum chamado encontrado.</td>
             </tr>
           )}
         </tbody>
