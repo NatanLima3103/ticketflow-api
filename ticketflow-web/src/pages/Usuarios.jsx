@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { UserPlus, Trash2, X, ShieldCheck, Wrench, User } from 'lucide-react';
+import { UserPlus, Trash2, X, Wrench, User } from 'lucide-react';
 import Layout from '../components/Layout';
 
 export default function Usuarios() {
-  // Estado inicial seguindo os requisitos: Id, Nome, Email, Perfil, Data
   const [usuarios, setUsuarios] = useState([
     { id: 1, nome: 'Guilherme Silvério', email: 'guilherme@email.com', role: 'Admin', dataCriacao: '10/05/2026' },
     { id: 2, nome: 'Wagner Silva', email: 'wagner@email.com', role: 'Técnico', dataCriacao: '11/05/2026' },
@@ -11,9 +10,8 @@ export default function Usuarios() {
   ]);
 
   const [modalAberto, setModalAberto] = useState(false);
-  const [novoUser, setNovoUser] = useState({ nome: '', email: '', role: 'Usuário' });
+  const [novoUser, setNovoUser] = useState({ nome: '', email: '', role: 'Usuário', senha: '' });
 
-  // Criar (C do CRUD)
   const handleSalvar = (e) => {
     e.preventDefault();
     const usuarioCompleto = {
@@ -22,11 +20,10 @@ export default function Usuarios() {
       dataCriacao: new Date().toLocaleDateString('pt-BR')
     };
     setUsuarios([...usuarios, usuarioCompleto]);
-    setNovoUser({ nome: '', email: '', role: 'Usuário' });
+    setNovoUser({ nome: '', email: '', role: 'Usuário', senha: '' });
     setModalAberto(false);
   };
 
-  // Excluir (D do CRUD)
   const handleExcluir = (id) => {
     if (window.confirm("Tem certeza que deseja remover este utilizador?")) {
       setUsuarios(usuarios.filter(u => u.id !== id));
@@ -77,18 +74,16 @@ export default function Usuarios() {
                   <span className="text-sm font-bold text-gray-800">{user.nome}</span>
                 </td>
                 <td className="p-4 text-sm text-gray-600">{user.email}</td>
-                <td className="p-4">
-                  <span className={`px-3 py-1 rounded-full text-[11px] font-bold border uppercase ${getRoleBadge(user.role)}`}>
+                <td className="p-4 font-bold">
+                  <span className={`px-3 py-1 rounded-full text-[11px] border uppercase ${getRoleBadge(user.role)}`}>
                     {user.role}
                   </span>
                 </td>
                 <td className="p-4 text-sm text-gray-500">{user.dataCriacao}</td>
-                <td className="p-4">
-                  <div className="flex justify-center gap-2">
-                    <button onClick={() => handleExcluir(user.id)} className="p-2 text-gray-400 hover:text-red-600 transition-colors">
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
+                <td className="p-4 text-center">
+                  <button onClick={() => handleExcluir(user.id)} className="p-2 text-gray-300 hover:text-red-600 transition-colors">
+                    <Trash2 size={18} />
+                  </button>
                 </td>
               </tr>
             ))}
@@ -96,54 +91,42 @@ export default function Usuarios() {
         </table>
       </div>
 
-      {/* Modal de Cadastro de Usuário */}
       {modalAberto && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6 border border-gray-100">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-800">Registar Utilizador</h3>
+              <h3 className="text-xl font-bold text-gray-800">Novo Utilizador</h3>
               <button onClick={() => setModalAberto(false)}><X className="text-gray-400" /></button>
             </div>
             
             <form onSubmit={handleSalvar} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
-                <input 
-                  type="text" 
-                  required
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
-                  value={novoUser.nome}
-                  onChange={(e) => setNovoUser({...novoUser, nome: e.target.value})}
-                />
+                <input type="text" required className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={novoUser.nome} onChange={(e) => setNovoUser({...novoUser, nome: e.target.value})} />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email Profissional</label>
-                <input 
-                  type="email" 
-                  required
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
-                  value={novoUser.email}
-                  onChange={(e) => setNovoUser({...novoUser, email: e.target.value})}
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input type="email" required className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={novoUser.email} onChange={(e) => setNovoUser({...novoUser, email: e.target.value})} />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Perfil de Acesso</label>
-                <select 
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
-                  value={novoUser.role}
-                  onChange={(e) => setNovoUser({...novoUser, role: e.target.value})}
-                >
-                  <option value="Usuário">Usuário (Apenas abre chamados)</option>
-                  <option value="Técnico">Técnico (Resolve chamados)</option>
-                  <option value="Admin">Administrador (Gestão total)</option>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Senha (Mín. 6 caracteres)</label>
+                <input type="password" required minLength="6" className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={novoUser.senha} onChange={(e) => setNovoUser({...novoUser, senha: e.target.value})} />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Perfil</label>
+                <select className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={novoUser.role} onChange={(e) => setNovoUser({...novoUser, role: e.target.value})}>
+                  <option value="Usuário">Usuário</option>
+                  <option value="Técnico">Técnico</option>
+                  <option value="Admin">Administrador</option>
                 </select>
               </div>
 
-              <div className="flex gap-3 mt-8">
-                <button type="button" onClick={() => setModalAberto(false)} className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-bold">Cancelar</button>
-                <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700">Criar Conta</button>
+              <div className="flex gap-3 pt-4">
+                <button type="button" onClick={() => setModalAberto(false)} className="flex-1 py-2 bg-gray-100 rounded-lg">Cancelar</button>
+                <button type="submit" className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold">Salvar</button>
               </div>
             </form>
           </div>

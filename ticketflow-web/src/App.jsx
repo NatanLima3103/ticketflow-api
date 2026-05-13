@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
+import Register from './pages/Register'; // Importando a nova página
 import Dashboard from './pages/Dashboard';
 import Usuarios from './pages/Usuarios';
 import Categorias from './pages/Categorias';
@@ -13,6 +14,9 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
+        
+        {/* Rota de Registro - Acesso público para novos usuários */}
+        <Route path="/register" element={<Register />} />
         
         {/* Todas as rotas abaixo estão protegidas pela nossa catraca */}
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
