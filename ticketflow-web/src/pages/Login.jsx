@@ -9,26 +9,16 @@ export default function Login() {
   const [erro, setErro] = useState(''); 
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
-    setErro(''); 
-
-    try {
-      const response = await api.post('/auth/login', {
-        email: email,
-        senha: senha
-      });
-
-      localStorage.setItem('@TicketFlow:token', response.data.token);
-      localStorage.setItem('@TicketFlow:usuario', JSON.stringify(response.data.usuario));
-
-      navigate('/dashboard');
-
-    } catch (error) {
-      setErro('Email ou senha incorretos. Tente novamente.');
-    }
+    
+    // Simula que o login deu certo gravando os dados na mão
+    localStorage.setItem('@TicketFlow:token', 'token-fake-123');
+    localStorage.setItem('@TicketFlow:usuario', JSON.stringify({ nome: 'Guilherme' }));
+    
+    // Manda para o dashboard pelo caminho interno do React (que não dá erro 404)
+    navigate('/dashboard');
   };
-
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
