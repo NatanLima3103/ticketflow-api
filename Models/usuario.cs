@@ -8,16 +8,16 @@ namespace TicketFlow.API.Models
         public int Id { get; set; }
 
         [Required]
-        [MaxLength(100)]
+        [MaxLength(100, ErrorMessage = "Tamanho máximo 100 caracteres")]
         public string Nome { get; set; } = string.Empty;
 
         [Required]
         [EmailAddress]
-        [MaxLength(150)]
+        [MaxLength(150, ErrorMessage = "Tamanho máximo 150 caracteres")]
         public string Email { get; set; } = string.Empty;
 
         [Required]
-        [MinLength(6)]
+        [MinLength(6, ErrorMessage = "Tamanho máximo 6 caracteres")]
         public string Senha { get; set; } = string.Empty;
 
         [Required]

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using TicketFlow.API.Data;
 using TicketFlow.API.DTOs;
 using TicketFlow.API.Models;
@@ -8,6 +9,7 @@ namespace TicketFlow.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ChamadosController : ControllerBase
     {
         private readonly AppDbContext _context;

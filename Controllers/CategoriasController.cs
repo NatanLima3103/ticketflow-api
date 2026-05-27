@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 using TicketFlow.API.Data;
 using TicketFlow.API.Models;
 using TicketFlow.API.DTOs;
@@ -8,6 +9,7 @@ namespace TicketFlow.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CategoriasController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -56,6 +58,7 @@ namespace TicketFlow.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Admin,Tecnico")]
         public async Task<ActionResult<CategoriaResponseDto>> Criar(CategoriaCreateDto dto)
         {
             var categoria = new Categoria
@@ -73,6 +76,7 @@ namespace TicketFlow.API.Controllers
         }
 
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin,Tecnico")]
         public async Task<IActionResult> Atualizar(int id, CategoriaUpdateDto dto)
         {
             if (id != dto.Id)
@@ -96,6 +100,7 @@ namespace TicketFlow.API.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,Tecnico")]
         public async Task<IActionResult> Excluir(int id)
         {
             var categoria = await _context.Categorias.FindAsync(id);
