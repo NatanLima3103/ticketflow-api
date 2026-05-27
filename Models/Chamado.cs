@@ -8,11 +8,11 @@ namespace TicketFlow.API.Models
         public int Id { get; set; }
 
         [Required]
-        [MaxLength(150)]
+        [MaxLength(150, ErrorMessage = "Tamanho máximo 150 caracteres")]
         public string Titulo { get; set; } = string.Empty;
 
         [Required]
-        [MaxLength(1000)]
+        [MaxLength(1000, ErrorMessage = "Tamanho máximo 1000 caracteres")]
         public string Descricao { get; set; } = string.Empty;
 
         [Required]
