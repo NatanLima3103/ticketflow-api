@@ -1,29 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { LogIn, Mail, Lock } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
+  
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState('');
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    
-    // Simulação de autenticação (Aqui você integraria com o backend futuramente)
-    if (email && senha.length >= 6) {
-      const usuarioFake = {
-        nome: email.split('@')[0],
-        email: email,
-        role: 'Admin'
-      };
-      
-      localStorage.setItem('@TicketFlow:token', 'token-gerado-123');
-      localStorage.setItem('@TicketFlow:usuario', JSON.stringify(usuarioFake));
-      
+    setErro('');
+    setLoading(true);
+
+    const result = await login(email, senha);
+
+    if (result.success) {
       navigate('/dashboard');
     } else {
-      alert("Credenciais inválidas ou senha muito curta!");
+      setErro(result.message);
+      setLoading(false);
     }
   };
 
@@ -37,6 +37,12 @@ export default function Login() {
           <h1 className="text-3xl font-extrabold text-gray-900">TicketFlow</h1>
           <p className="text-gray-500 mt-2">Gestão de Chamados Inteligente</p>
         </div>
+
+        {erro && (
+          <div className="bg-red-100 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 text-sm">
+            {erro}
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="relative">
@@ -65,9 +71,10 @@ export default function Login() {
 
           <button 
             type="submit" 
-            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-800 transition-all shadow-lg shadow-blue-200"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-800 transition-all shadow-lg shadow-blue-200 disabled:opacity-50"
           >
-            Entrar no Sistema
+            {loading ? 'Entrando...' : 'Entrar no Sistema'}
           </button>
         </form>
 
