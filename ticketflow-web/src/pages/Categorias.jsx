@@ -24,6 +24,7 @@ export default function Categorias() {
       const response = await api.get('api/Categorias');
       setCategorias(response.data);
     } catch (error) {
+      console.error("Erro ao carregar categorias:", error);
       alert("Erro ao carregar categorias");
     } finally {
       setLoading(false);
@@ -38,6 +39,7 @@ export default function Categorias() {
       setModalAberto(false);
       carregarCategorias();
     } catch (error) {
+      console.error("Erro ao salvar categoria:", error);
       alert("Erro ao salvar categoria");
     }
   };
@@ -48,6 +50,7 @@ export default function Categorias() {
         await api.delete(`api/Categorias/${id}`);
         carregarCategorias();
       } catch (error) {
+        console.error("Erro ao excluir categoria:", error);
         alert("Erro ao excluir categoria");
       }
     }

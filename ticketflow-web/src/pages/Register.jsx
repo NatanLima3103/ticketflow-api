@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { UserPlus, Mail, Lock, User } from 'lucide-react';
+import { Mail, Lock, User } from 'lucide-react';
 import api from '../services/api';
 
 export default function Register() {
@@ -20,7 +20,6 @@ export default function Register() {
     setLoading(true);
 
     try {
-      // Perfil 3 = Solicitante (Padrão para novos registros)
       await api.post('api/Usuarios', {
         nome: form.nome,
         email: form.email,

@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect } from 'react';
 import api from '../services/api';
 
 const AuthContext = createContext({});
@@ -8,7 +8,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Busca dados salvos no carregamento da página
     const storedUser = localStorage.getItem('@TicketFlow:usuario');
     const storedToken = localStorage.getItem('@TicketFlow:token');
 

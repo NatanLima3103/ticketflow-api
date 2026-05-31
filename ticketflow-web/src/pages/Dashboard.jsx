@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Ticket, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Ticket, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import Layout from '../components/Layout';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,6 +31,7 @@ export default function Dashboard() {
         resolvidos: chamadosVisiveis.filter(c => c.status === 3).length,
       });
     } catch (error) {
+      console.error("Erro ao carregar estatísticas:", error);
       console.error("Erro ao carregar estatísticas");
     } finally {
       setLoading(false);

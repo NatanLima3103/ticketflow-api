@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Filter, Search, Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Plus } from 'lucide-react';
 import Layout from '../components/Layout';
 import ChamadosTabela from '../components/ChamadosTabela';
 import NovoChamadoModal from '../components/NovoChamadoModal';
@@ -26,6 +26,7 @@ export default function Chamados() {
       const response = await api.get('api/Chamados');
       setChamados(response.data);
     } catch (error) {
+      console.error("Erro ao carregar chamados:", error);
       alert("Erro ao carregar chamados");
     } finally {
       setLoading(false);
@@ -62,6 +63,7 @@ export default function Chamados() {
       setModalAberto(false);
       setChamadoSendoEditado(null);
     } catch (error) {
+      console.error("Erro ao salvar chamado:", error);
       alert("Erro ao salvar chamado");
     }
   };
@@ -81,6 +83,7 @@ export default function Chamados() {
       });
       carregarChamados();
     } catch (error) {
+      console.error("Erro ao alterar status:", error);
       alert("Erro ao alterar status");
     }
   };
@@ -91,6 +94,7 @@ export default function Chamados() {
         await api.delete(`api/Chamados/${id}`);
         carregarChamados();
       } catch (error) {
+        console.error("Erro ao excluir chamado:", error);
         alert("Erro ao excluir chamado");
       }
     }

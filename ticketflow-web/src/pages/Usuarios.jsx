@@ -48,6 +48,7 @@ export default function Usuarios() {
         await api.delete(`api/Usuarios/${id}`);
         carregarUsuarios();
       } catch (error) {
+        console.error("Erro ao excluir usuário:", error);
         alert("Erro ao excluir usuário");
       }
     }
