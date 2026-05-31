@@ -21,19 +21,19 @@ namespace TicketFlow.API.Data
                 .HasOne(c => c.Usuario)
                 .WithMany(u => u.ChamadosAbertos)
                 .HasForeignKey(c => c.UsuarioId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Chamado>()
                 .HasOne(c => c.TecnicoResponsavel)
                 .WithMany(u => u.ChamadosComoTecnico)
                 .HasForeignKey( c => c.TecnicoResponsavelId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Chamado>()
                 .HasOne(c => c.Categoria)
                 .WithMany(categoria => categoria.Chamados)
                 .HasForeignKey(c => c.CategoriaId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
