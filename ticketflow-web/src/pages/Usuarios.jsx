@@ -1,39 +1,71 @@
-import React, { useState } from 'react';
-import { UserPlus, Trash2, X, Wrench, User } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { UserPlus, Trash2, X } from 'lucide-react';
 import Layout from '../components/Layout';
+import api from '../services/api';
 
 export default function Usuarios() {
-  const [usuarios, setUsuarios] = useState([
-    { id: 1, nome: 'Guilherme Silvério', email: 'guilherme@email.com', role: 'Admin', dataCriacao: '10/05/2026' },
-    { id: 2, nome: 'Wagner Silva', email: 'wagner@email.com', role: 'Técnico', dataCriacao: '11/05/2026' },
-    { id: 3, nome: 'Danuza Souza', email: 'danuza@email.com', role: 'Usuário', dataCriacao: '12/05/2026' },
-  ]);
-
+  const [usuarios, setUsuarios] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
-  const [novoUser, setNovoUser] = useState({ nome: '', email: '', role: 'Usuário', senha: '' });
+  const [novoUser, setNovoUser] = useState({ nome: '', email: '', perfil: 3, senha: '' });
 
-  const handleSalvar = (e) => {
+  useEffect(() => {
+    carregarUsuarios();
+  }, []);
+
+  async function carregarUsuarios() {
+    try {
+      setLoading(true);
+      const response = await api.get('api/Usuarios');
+      setUsuarios(response.data);
+    } catch (error) {
+      alert("Erro ao carregar usuários");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleSalvar = async (e) => {
     e.preventDefault();
-    const usuarioCompleto = {
-      ...novoUser,
-      id: Math.floor(Math.random() * 1000),
-      dataCriacao: new Date().toLocaleDateString('pt-BR')
-    };
-    setUsuarios([...usuarios, usuarioCompleto]);
-    setNovoUser({ nome: '', email: '', role: 'Usuário', senha: '' });
-    setModalAberto(false);
-  };
-
-  const handleExcluir = (id) => {
-    if (window.confirm("Tem certeza que deseja remover este utilizador?")) {
-      setUsuarios(usuarios.filter(u => u.id !== id));
+    try {
+      await api.post('api/Usuarios', {
+        ...novoUser,
+        perfil: Number(novoUser.perfil)
+      });
+      
+      setNovoUser({ nome: '', email: '', perfil: 3, senha: '' });
+      setModalAberto(false);
+      carregarUsuarios();
+    } catch (error) {
+      const msg = error.response?.data || "Erro ao salvar usuário";
+      alert(typeof msg === 'string' ? msg : "Erro de validação");
     }
   };
 
-  const getRoleBadge = (role) => {
-    switch (role) {
-      case 'Admin': return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'Técnico': return 'bg-blue-100 text-blue-700 border-blue-200';
+  const handleExcluir = async (id) => {
+    if (window.confirm("Tem certeza que deseja remover este utilizador?")) {
+      try {
+        await api.delete(`api/Usuarios/${id}`);
+        carregarUsuarios();
+      } catch (error) {
+        alert("Erro ao excluir usuário");
+      }
+    }
+  };
+
+  const getRoleLabel = (perfil) => {
+    switch (perfil) {
+      case 1: return 'Admin';
+      case 2: return 'Técnico';
+      case 3: return 'Usuário';
+      default: return 'Desconhecido';
+    }
+  };
+
+  const getRoleBadge = (perfil) => {
+    switch (perfil) {
+      case 1: return 'bg-purple-100 text-purple-700 border-purple-200';
+      case 2: return 'bg-blue-100 text-blue-700 border-blue-200';
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
@@ -54,41 +86,47 @@ export default function Usuarios() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-50 border-b border-gray-100">
-            <tr>
-              <th className="p-4 font-semibold text-gray-600 text-sm">Utilizador</th>
-              <th className="p-4 font-semibold text-gray-600 text-sm">Email</th>
-              <th className="p-4 font-semibold text-gray-600 text-sm">Perfil</th>
-              <th className="p-4 font-semibold text-gray-600 text-sm">Criado em</th>
-              <th className="p-4 font-semibold text-gray-600 text-sm text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {usuarios.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="p-4 flex items-center gap-3">
-                  <div className="w-9 h-9 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
-                    {user.nome.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="text-sm font-bold text-gray-800">{user.nome}</span>
-                </td>
-                <td className="p-4 text-sm text-gray-600">{user.email}</td>
-                <td className="p-4 font-bold">
-                  <span className={`px-3 py-1 rounded-full text-[11px] border uppercase ${getRoleBadge(user.role)}`}>
-                    {user.role}
-                  </span>
-                </td>
-                <td className="p-4 text-sm text-gray-500">{user.dataCriacao}</td>
-                <td className="p-4 text-center">
-                  <button onClick={() => handleExcluir(user.id)} className="p-2 text-gray-300 hover:text-red-600 transition-colors">
-                    <Trash2 size={18} />
-                  </button>
-                </td>
+        {loading ? (
+          <div className="p-8 text-center text-gray-500">Carregando usuários...</div>
+        ) : (
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>
+                <th className="p-4 font-semibold text-gray-600 text-sm">Utilizador</th>
+                <th className="p-4 font-semibold text-gray-600 text-sm">Email</th>
+                <th className="p-4 font-semibold text-gray-600 text-sm">Perfil</th>
+                <th className="p-4 font-semibold text-gray-600 text-sm">Criado em</th>
+                <th className="p-4 font-semibold text-gray-600 text-sm text-center">Ações</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {usuarios.map((user) => (
+                <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="p-4 flex items-center gap-3">
+                    <div className="w-9 h-9 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center font-bold text-sm">
+                      {user.nome.charAt(0).toUpperCase()}
+                    </div>
+                    <span className="text-sm font-bold text-gray-800">{user.nome}</span>
+                  </td>
+                  <td className="p-4 text-sm text-gray-600">{user.email}</td>
+                  <td className="p-4 font-bold">
+                    <span className={`px-3 py-1 rounded-full text-[11px] border uppercase ${getRoleBadge(user.perfil)}`}>
+                      {getRoleLabel(user.perfil)}
+                    </span>
+                  </td>
+                  <td className="p-4 text-sm text-gray-500">
+                    {new Date(user.dataCriacao).toLocaleDateString('pt-BR')}
+                  </td>
+                  <td className="p-4 text-center">
+                    <button onClick={() => handleExcluir(user.id)} className="p-2 text-gray-300 hover:text-red-600 transition-colors">
+                      <Trash2 size={18} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {modalAberto && (
@@ -117,10 +155,10 @@ export default function Usuarios() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Perfil</label>
-                <select className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={novoUser.role} onChange={(e) => setNovoUser({...novoUser, role: e.target.value})}>
-                  <option value="Usuário">Usuário</option>
-                  <option value="Técnico">Técnico</option>
-                  <option value="Admin">Administrador</option>
+                <select className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" value={novoUser.perfil} onChange={(e) => setNovoUser({...novoUser, perfil: e.target.value})}>
+                  <option value={3}>Usuário</option>
+                  <option value={2}>Técnico</option>
+                  <option value={1}>Administrador</option>
                 </select>
               </div>
 

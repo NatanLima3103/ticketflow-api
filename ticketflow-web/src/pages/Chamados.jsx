@@ -1,49 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Filter, Search, Plus } from 'lucide-react';
 import Layout from '../components/Layout';
 import ChamadosTabela from '../components/ChamadosTabela';
 import NovoChamadoModal from '../components/NovoChamadoModal';
+import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Chamados() {
-  const [chamados, setChamados] = useState([
-    { id: '101', assunto: 'Erro no login', cliente: 'Guilherme', categoria: 'Software', status: 'Aberto', prioridade: 'Alta', data: '13/05/2026' },
-    { id: '102', assunto: 'Impressora travada', cliente: 'Wagner', categoria: 'Hardware', status: 'Em Atendimento', prioridade: 'Média', data: '12/05/2026' },
-    { id: '103', assunto: 'Sem internet no setor A', cliente: 'Danuza', categoria: 'Rede', status: 'Resolvido', prioridade: 'Alta', data: '10/05/2026' },
-  ]);
-
-  const [filtroStatus, setFiltroStatus] = useState('Todos');
-  const [filtroPrioridade, setFiltroPrioridade] = useState('Todos');
+  const { user } = useAuth();
+  const [chamados, setChamados] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filtroStatus, setFiltroStatus] = useState('0'); // '0' para todos
+  const [filtroPrioridade, setFiltroPrioridade] = useState('0'); // '0' para todas
   const [busca, setBusca] = useState('');
   const [modalAberto, setModalAberto] = useState(false);
-  
-  // Estado para controlar qual chamado estamos editando
   const [chamadoSendoEditado, setChamadoSendoEditado] = useState(null);
 
-  // Filtro Combinado
+  useEffect(() => {
+    carregarChamados();
+  }, []);
+
+  async function carregarChamados() {
+    try {
+      setLoading(true);
+      const response = await api.get('api/Chamados');
+      setChamados(response.data);
+    } catch (error) {
+      alert("Erro ao carregar chamados");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const chamadosFiltrados = chamados.filter(c => {
-    const matchesStatus = filtroStatus === 'Todos' || c.status === filtroStatus;
-    const matchesPrioridade = filtroPrioridade === 'Todos' || c.prioridade === filtroPrioridade;
-    const matchesBusca = c.assunto.toLowerCase().includes(busca.toLowerCase());
-    return matchesStatus && matchesPrioridade && matchesBusca;
+    const matchesStatus = filtroStatus === '0' || c.status.toString() === filtroStatus;
+    const matchesPrioridade = filtroPrioridade === '0' || c.prioridade.toString() === filtroPrioridade;
+    const matchesBusca = c.titulo.toLowerCase().includes(busca.toLowerCase()) || 
+                         c.descricao.toLowerCase().includes(busca.toLowerCase());
+    
+    // Filtro de visibilidade: Solicitante (3) só vê os dele
+    const matchesUser = user.perfil !== 3 || c.usuarioId === user.id;
+
+    return matchesStatus && matchesPrioridade && matchesBusca && matchesUser;
   });
 
-  // Função Única para Salvar (Criação ou Edição)
-  const salvarChamado = (dados) => {
-    if (dados.id) {
-      // Se tem ID, estamos editando
-      setChamados(chamados.map(c => c.id === dados.id ? { ...c, ...dados } : c));
-    } else {
-      // Se não tem ID, estamos criando um novo
-      const novo = { 
-        ...dados, 
-        id: Math.floor(Math.random() * 1000).toString(), 
-        data: new Date().toLocaleDateString('pt-BR'), 
-        status: 'Aberto', 
-        cliente: 'Guilherme' 
-      };
-      setChamados([novo, ...chamados]);
+  const salvarChamado = async (dados) => {
+    try {
+      if (dados.id) {
+        await api.put(`api/Chamados/${dados.id}`, {
+            ...dados,
+            usuarioId: dados.usuarioId || user.id // Mantém o dono original se possível
+        });
+      } else {
+        await api.post('api/Chamados', {
+          ...dados,
+          usuarioId: user.id, // O usuário logado é o solicitante
+          status: 1 // Aberto
+        });
+      }
+      carregarChamados();
+      setModalAberto(false);
+      setChamadoSendoEditado(null);
+    } catch (error) {
+      alert("Erro ao salvar chamado");
     }
-    setChamadoSendoEditado(null);
   };
 
   const abrirEdicao = (chamado) => {
@@ -51,12 +71,29 @@ export default function Chamados() {
     setModalAberto(true);
   };
 
-  const alterarStatus = (id, novoStatus) => {
-    setChamados(chamados.map(c => c.id === id ? { ...c, status: novoStatus } : c));
+  const alterarStatus = async (id, novoStatus) => {
+    try {
+      const chamado = chamados.find(c => c.id === id);
+      await api.put(`api/Chamados/${id}`, {
+        ...chamado,
+        status: novoStatus,
+        tecnicoResponsavelId: novoStatus === 2 ? user.id : chamado.tecnicoResponsavelId
+      });
+      carregarChamados();
+    } catch (error) {
+      alert("Erro ao alterar status");
+    }
   };
 
-  const excluirChamado = (id) => {
-    if(window.confirm("Excluir chamado?")) setChamados(chamados.filter(c => c.id !== id));
+  const excluirChamado = async (id) => {
+    if (window.confirm("Excluir chamado?")) {
+      try {
+        await api.delete(`api/Chamados/${id}`);
+        carregarChamados();
+      } catch (error) {
+        alert("Erro ao excluir chamado");
+      }
+    }
   };
 
   return (
@@ -78,20 +115,20 @@ export default function Chamados() {
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-gray-400 uppercase">Status</span>
           <select className="bg-gray-50 border-none rounded-lg text-sm p-2 outline-none" value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
-            <option value="Todos">Todos</option>
-            <option value="Aberto">Aberto</option>
-            <option value="Em Atendimento">Em Atendimento</option>
-            <option value="Resolvido">Resolvido</option>
+            <option value="0">Todos</option>
+            <option value="1">Aberto</option>
+            <option value="2">Em Atendimento</option>
+            <option value="3">Resolvido</option>
           </select>
         </div>
 
         <div className="flex items-center gap-2 border-l pl-4">
           <span className="text-xs font-bold text-gray-400 uppercase">Prioridade</span>
           <select className="bg-gray-50 border-none rounded-lg text-sm p-2 outline-none" value={filtroPrioridade} onChange={(e) => setFiltroPrioridade(e.target.value)}>
-            <option value="Todos">Todas</option>
-            <option value="Alta">Alta</option>
-            <option value="Media">Média</option>
-            <option value="Baixa">Baixa</option>
+            <option value="0">Todas</option>
+            <option value="3">Alta</option>
+            <option value="2">Média</option>
+            <option value="1">Baixa</option>
           </select>
         </div>
 
@@ -101,12 +138,16 @@ export default function Chamados() {
         </div>
       </div>
 
-      <ChamadosTabela 
-        chamados={chamadosFiltrados} 
-        aoExcluir={excluirChamado} 
-        aoAlterarStatus={alterarStatus} 
-        aoEditar={abrirEdicao}
-      />
+      {loading ? (
+        <div className="p-10 text-center text-gray-500">Carregando chamados...</div>
+      ) : (
+        <ChamadosTabela 
+          chamados={chamadosFiltrados} 
+          aoExcluir={excluirChamado} 
+          aoAlterarStatus={alterarStatus} 
+          aoEditar={abrirEdicao}
+        />
+      )}
 
       <NovoChamadoModal 
         isOpen={modalAberto} 

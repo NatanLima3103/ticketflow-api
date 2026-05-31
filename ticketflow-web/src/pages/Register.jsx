@@ -1,24 +1,40 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { UserPlus, Mail, Lock, User } from 'lucide-react';
+import api from '../services/api';
 
 export default function Register() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ nome: '', email: '', senha: '', confirmarSenha: '' });
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState('');
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    
+    setErro('');
+
     if (form.senha !== form.confirmarSenha) {
-      return alert("As senhas não coincidem!");
+      return setErro("As senhas não coincidem!");
     }
 
-    // Simulando o salvamento (Requisito: Email válido e Senha min 6)
-    const novoUsuario = { nome: form.nome, email: form.email, role: 'Usuário' };
-    localStorage.setItem('@TicketFlow:usuario', JSON.stringify(novoUsuario));
-    
-    alert("Conta criada com sucesso! Agora faça seu login.");
-    navigate('/login');
+    setLoading(true);
+
+    try {
+      // Perfil 3 = Solicitante (Padrão para novos registros)
+      await api.post('api/Usuarios', {
+        nome: form.nome,
+        email: form.email,
+        senha: form.senha,
+        perfil: 3 
+      });
+
+      alert("Conta criada com sucesso! Agora faça seu login.");
+      navigate('/login');
+    } catch (error) {
+      const message = error.response?.data || 'Erro ao criar conta. Verifique os dados.';
+      setErro(typeof message === 'string' ? message : 'Erro na validação dos campos.');
+      setLoading(false);
+    }
   };
 
   return (
@@ -28,6 +44,12 @@ export default function Register() {
           <h1 className="text-3xl font-bold text-blue-700">TicketFlow</h1>
           <p className="text-gray-500">Crie sua conta para abrir chamados</p>
         </div>
+
+        {erro && (
+          <div className="bg-red-100 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6 text-sm">
+            {erro}
+          </div>
+        )}
 
         <form onSubmit={handleRegister} className="space-y-5">
           <div className="relative">
@@ -66,8 +88,12 @@ export default function Register() {
             />
           </div>
 
-          <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg">
-            Criar Minha Conta
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg disabled:opacity-50"
+          >
+            {loading ? 'Criando conta...' : 'Criar Minha Conta'}
           </button>
         </form>
 

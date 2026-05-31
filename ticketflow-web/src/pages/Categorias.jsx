@@ -1,34 +1,55 @@
-import React, { useState } from 'react';
-import { Plus, Trash2, Edit, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Trash2, X } from 'lucide-react';
 import Layout from '../components/Layout';
+import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Categorias() {
-  // Estado para a lista de categorias (Requisito: Id, Nome, Descrição)
-  const [categorias, setCategorias] = useState([
-    { id: 1, nome: 'Hardware', descricao: 'Problemas físicos em computadores e periféricos' },
-    { id: 2, nome: 'Software', descricao: 'Erros de programas e sistemas operacionais' },
-    { id: 3, nome: 'Rede', descricao: 'Problemas de conexão, Wi-Fi e cabos' },
-  ]);
-
+  const { user } = useAuth();
+  const [categorias, setCategorias] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
   const [novaCat, setNovaCat] = useState({ nome: '', descricao: '' });
 
-  // Função para Criar (C do CRUD)
-  const handleSalvar = (e) => {
+  // Somente Admin (1) e Técnico (2) podem gerenciar categorias
+  const podeGerenciar = user && [1, 2].includes(user.perfil);
+
+  useEffect(() => {
+    carregarCategorias();
+  }, []);
+
+  async function carregarCategorias() {
+    try {
+      setLoading(true);
+      const response = await api.get('api/Categorias');
+      setCategorias(response.data);
+    } catch (error) {
+      alert("Erro ao carregar categorias");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleSalvar = async (e) => {
     e.preventDefault();
-    const categoriaCompleta = {
-      ...novaCat,
-      id: Math.floor(Math.random() * 1000)
-    };
-    setCategorias([...categorias, categoriaCompleta]);
-    setNovaCat({ nome: '', descricao: '' });
-    setModalAberto(false);
+    try {
+      await api.post('api/Categorias', novaCat);
+      setNovaCat({ nome: '', descricao: '' });
+      setModalAberto(false);
+      carregarCategorias();
+    } catch (error) {
+      alert("Erro ao salvar categoria");
+    }
   };
 
-  // Função para Excluir (D do CRUD)
-  const handleExcluir = (id) => {
+  const handleExcluir = async (id) => {
     if (window.confirm("Deseja excluir esta categoria?")) {
-      setCategorias(categorias.filter(c => c.id !== id));
+      try {
+        await api.delete(`api/Categorias/${id}`);
+        carregarCategorias();
+      } catch (error) {
+        alert("Erro ao excluir categoria");
+      }
     }
   };
 
@@ -39,45 +60,49 @@ export default function Categorias() {
           <h1 className="text-2xl font-bold text-gray-800">Categorias</h1>
           <p className="text-gray-500">Defina as categorias para os chamados</p>
         </div>
-        <button 
-          onClick={() => setModalAberto(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700"
-        >
-          <Plus size={20} /> Nova Categoria
-        </button>
+        {podeGerenciar && (
+          <button 
+            onClick={() => setModalAberto(true)}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700"
+          >
+            <Plus size={20} /> Nova Categoria
+          </button>
+        )}
       </div>
 
-      {/* Tabela de Listagem (R do CRUD) */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead className="bg-gray-50 border-b border-gray-100">
-            <tr>
-              <th className="p-4 font-semibold text-gray-600 text-sm">ID</th>
-              <th className="p-4 font-semibold text-gray-600 text-sm">Nome</th>
-              <th className="p-4 font-semibold text-gray-600 text-sm">Descrição</th>
-              <th className="p-4 font-semibold text-gray-600 text-sm text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {categorias.map((cat) => (
-              <tr key={cat.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="p-4 text-sm text-gray-500 font-medium">#{cat.id}</td>
-                <td className="p-4 text-sm font-bold text-gray-800">{cat.nome}</td>
-                <td className="p-4 text-sm text-gray-600">{cat.descricao}</td>
-                <td className="p-4 text-sm">
-                  <div className="flex justify-center gap-3">
-                    <button onClick={() => handleExcluir(cat.id)} className="p-2 text-gray-400 hover:text-red-600 transition-colors">
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </td>
+        {loading ? (
+          <div className="p-8 text-center text-gray-500">Carregando categorias...</div>
+        ) : (
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>
+                <th className="p-4 font-semibold text-gray-600 text-sm">ID</th>
+                <th className="p-4 font-semibold text-gray-600 text-sm">Nome</th>
+                <th className="p-4 font-semibold text-gray-600 text-sm">Descrição</th>
+                {podeGerenciar && <th className="p-4 font-semibold text-gray-600 text-sm text-center">Ações</th>}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {categorias.map((cat) => (
+                <tr key={cat.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="p-4 text-sm text-gray-500 font-medium">#{cat.id}</td>
+                  <td className="p-4 text-sm font-bold text-gray-800">{cat.nome}</td>
+                  <td className="p-4 text-sm text-gray-600">{cat.descricao}</td>
+                  {podeGerenciar && (
+                    <td className="p-4 text-sm text-center">
+                      <button onClick={() => handleExcluir(cat.id)} className="p-2 text-gray-400 hover:text-red-600 transition-colors">
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
-      {/* Modal de Cadastro de Categoria */}
       {modalAberto && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl p-6">

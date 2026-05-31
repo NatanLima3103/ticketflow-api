@@ -1,95 +1,80 @@
-import React, { useState } from 'react';
-import { PlusCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { LayoutDashboard, Ticket, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import Layout from '../components/Layout';
-import ChamadosTabela from '../components/ChamadosTabela';
-import NovoChamadoModal from '../components/NovoChamadoModal';
+import api from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Dashboard() {
-  const [chamados, setChamados] = useState([
-    { id: '101', assunto: 'Erro no login do sistema', cliente: 'Empresa ABC', data: '13/05/2026', status: 'Aberto', prioridade: 'Alta', categoria: 'Software' },
-    { id: '102', assunto: 'Instalação de impressora', cliente: 'João Silva', data: '12/05/2026', status: 'Em Atendimento', prioridade: 'Média', categoria: 'Hardware' },
-    { id: '103', assunto: 'Dúvida sobre faturamento', cliente: 'Maria Souza', data: '10/05/2026', status: 'Resolvido', prioridade: 'Baixa', categoria: 'Financeiro' },
-  ]);
+  const { user } = useAuth();
+  const [estatisticas, setEstatisticas] = useState({ total: 0, abertos: 0, andamento: 0, resolvidos: 0 });
+  const [loading, setLoading] = useState(true);
 
-  const [modalAberto, setModalAberto] = useState(false);
-  const [chamadoParaEditar, setChamadoParaEditar] = useState(null);
-  
-  const salvarChamado = (dados) => {
-    if (dados.id) {
-      setChamados(chamados.map(c => c.id === dados.id ? { ...c, ...dados } : c));
-    } else {
-      const novo = {
-        ...dados,
-        id: Math.floor(Math.random() * 1000).toString(),
-        data: new Date().toLocaleDateString('pt-BR'),
-        status: 'Aberto',
-        cliente: 'Guilherme'
-      };
-      setChamados([novo, ...chamados]);
+  useEffect(() => {
+    carregarEstatisticas();
+  }, []);
+
+  async function carregarEstatisticas() {
+    try {
+      setLoading(true);
+      const response = await api.get('api/Chamados');
+      const chamados = response.data;
+
+      // Filtrar se for solicitante
+      const chamadosVisiveis = user.perfil === 3 
+        ? chamados.filter(c => c.usuarioId === user.id)
+        : chamados;
+
+      setEstatisticas({
+        total: chamadosVisiveis.length,
+        abertos: chamadosVisiveis.filter(c => c.status === 1).length,
+        andamento: chamadosVisiveis.filter(c => c.status === 2).length,
+        resolvidos: chamadosVisiveis.filter(c => c.status === 3).length,
+      });
+    } catch (error) {
+      console.error("Erro ao carregar estatísticas");
+    } finally {
+      setLoading(false);
     }
-    setChamadoParaEditar(null);
-  };
+  }
 
-  const abrirEdicao = (chamado) => {
-    setChamadoParaEditar(chamado);
-    setModalAberto(true);
-  };
-
-  const alterarStatus = (id, novoStatus) => {
-    setChamados(chamados.map(c => c.id === id ? { ...c, status: novoStatus } : c));
-  };
-
-  const excluirChamado = (id) => {
-    if (window.confirm("Excluir este chamado?")) {
-      setChamados(chamados.filter(c => c.id !== id));
-    }
-  };
-
-  const totalChamados = chamados.length;
-  const numAbertos = chamados.filter(c => c.status !== 'Resolvido').length;
-  const numResolvidos = chamados.filter(c => c.status === 'Resolvido').length;
+  const cards = [
+    { title: 'Total de Chamados', value: estatisticas.total, icon: Ticket, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { title: 'Abertos', value: estatisticas.abertos, icon: AlertCircle, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+    { title: 'Em Atendimento', value: estatisticas.andamento, icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { title: 'Resolvidos', value: estatisticas.resolvidos, icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' },
+  ];
 
   return (
     <Layout>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
-          <p className="text-xs text-gray-400 uppercase font-bold">Total de Tickets</p>
-          <h3 className="text-3xl font-bold text-gray-800">{totalChamados}</h3>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-yellow-500">
-          <p className="text-xs text-gray-400 uppercase font-bold">Pendente</p>
-          <h3 className="text-3xl font-bold text-gray-800">{numAbertos}</h3>
-        </div>
-        <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
-          <p className="text-xs text-gray-400 uppercase font-bold">Resolvidos</p>
-          <h3 className="text-3xl font-bold text-gray-800">{numResolvidos}</h3>
-        </div>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-800">Olá, {user?.nome}!</h1>
+        <p className="text-gray-500">Bem-vindo ao painel de controle do TicketFlow</p>
       </div>
 
-      <h3 className="text-lg font-bold text-gray-800 mb-4">Últimos Chamados</h3>
-      <ChamadosTabela 
-        chamados={chamados} 
-        aoExcluir={excluirChamado}
-        aoEditar={abrirEdicao}
-        aoAlterarStatus={alterarStatus}
-      />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {cards.map((card, index) => (
+          <div key={index} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
+            <div className={`p-4 rounded-xl ${card.bg} ${card.color}`}>
+              <card.icon size={24} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">{card.title}</p>
+              <h3 className="text-2xl font-bold text-gray-800">{loading ? '...' : card.value}</h3>
+            </div>
+          </div>
+        ))}
+      </div>
 
-      <div className="mt-8 bg-white p-8 rounded-xl shadow-sm text-center border-2 border-dashed border-gray-200">
-        <h4 className="text-lg font-medium text-gray-700 mb-4">Encontrou um novo problema?</h4>
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 text-white shadow-xl">
+        <h2 className="text-2xl font-bold mb-2">Precisa de ajuda?</h2>
+        <p className="opacity-90 mb-6 max-w-md">Abra um novo chamado para que nossa equipe técnica possa resolver seu problema o mais rápido possível.</p>
         <button 
-          onClick={() => { setChamadoParaEditar(null); setModalAberto(true); }} 
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all"
+          onClick={() => window.location.href = '/chamados'}
+          className="bg-white text-blue-600 px-6 py-2 rounded-lg font-bold hover:bg-blue-50 transition-colors"
         >
-          <PlusCircle size={20}/> Abrir Novo Chamado
+          Ir para Chamados
         </button>
       </div>
-
-      <NovoChamadoModal 
-        isOpen={modalAberto} 
-        onClose={() => { setModalAberto(false); setChamadoParaEditar(null); }} 
-        aoSalvar={salvarChamado}
-        chamadoParaEditar={chamadoParaEditar}
-      />
     </Layout>
   );
 }
